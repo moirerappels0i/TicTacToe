@@ -1,0 +1,164 @@
+@page "/"
+@page "/game"
+
+<PageTitle>Tic Tac Toe</PageTitle>
+
+<div class="game-container">
+    <h1>Tic Tac Toe</h1>
+    
+    <div class="game-info">
+        @if (winner != null)
+        {
+            <div class="winner-message">
+                @if (winner == "Draw")
+                {
+                    <span>It's a Draw! 🤝</span>
+                }
+                else
+                {
+                    <span>Player @winner Wins! 🎉</span>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="current-player">
+                Current Player: <span class="player-@currentPlayer">@currentPlayer</span>
+            </div>
+        }
+    </div>
+
+    <div class="board">
+        @for (int i = 0; i < 9; i++)
+        {
+            int index = i;
+            <button class="cell @GetCellClass(index)" 
+                    @onclick="() => MakeMove(index)"
+                    disabled="@(board[index] != null || winner != null)">
+                @board[index]
+            </button>
+        }
+    </div>
+
+    <button class="reset-button" @onclick="ResetGame">New Game</button>
+
+    <div class="score-board">
+        <div class="score-item">
+            <span class="player-X">X</span>: @scoreX
+        </div>
+        <div class="score-item">
+            <span class="player-O">O</span>: @scoreO
+        </div>
+        <div class="score-item">
+            Draws: @draws
+        </div>
+    </div>
+</div>
+
+@code {
+    private string?[] board = new string?[9];
+    private string currentPlayer = "X";
+    private string? winner = null;
+    private int scoreX = 0;
+    private int scoreO = 0;
+    private int draws = 0;
+
+    private int[][] winPatterns = new int[][]
+    {
+        new int[] { 0, 1, 2 },
+        new int[] { 3, 4, 5 },
+        new int[] { 6, 7, 8 },
+        new int[] { 0, 3, 6 },
+        new int[] { 1, 4, 7 },
+        new int[] { 2, 5, 8 },
+        new int[] { 0, 4, 8 },
+        new int[] { 2, 4, 6 }
+    };
+
+    protected override void OnInitialized()
+    {
+        LoadScores();
+    }
+
+    private void MakeMove(int index)
+    {
+        if (board[index] == null && winner == null)
+        {
+            board[index] = currentPlayer;
+            CheckWinner();
+            
+            if (winner == null)
+            {
+                currentPlayer = currentPlayer == "X" ? "O" : "X";
+            }
+            else
+            {
+                UpdateScores();
+            }
+        }
+    }
+
+    private void CheckWinner()
+    {
+        foreach (var pattern in winPatterns)
+        {
+            if (board[pattern[0]] != null &&
+                board[pattern[0]] == board[pattern[1]] &&
+                board[pattern[1]] == board[pattern[2]])
+            {
+                winner = board[pattern[0]];
+                return;
+            }
+        }
+
+        if (board.All(cell => cell != null))
+        {
+            winner = "Draw";
+        }
+    }
+
+    private void ResetGame()
+    {
+        board = new string?[9];
+        currentPlayer = "X";
+        winner = null;
+    }
+
+    private void UpdateScores()
+    {
+        if (winner == "X")
+        {
+            scoreX++;
+        }
+        else if (winner == "O")
+        {
+            scoreO++;
+        }
+        else if (winner == "Draw")
+        {
+            draws++;
+        }
+        SaveScores();
+    }
+
+    private void SaveScores()
+    {
+        // This will be saved in browser's localStorage
+        // In a full implementation, you'd use JSInterop
+    }
+
+    private void LoadScores()
+    {
+        // This will load from browser's localStorage
+        // In a full implementation, you'd use JSInterop
+    }
+
+    private string GetCellClass(int index)
+    {
+        if (board[index] != null)
+        {
+            return $"filled player-{board[index]}";
+        }
+        return "";
+    }
+}
